@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { TrophyIcon, ArrowPathIcon, ForwardIcon, HomeIcon } from '@heroicons/react/24/solid';
-import Navbar from '../components/Navbar';
 import { getPhaseById, PHASES } from '../data/phases';
 import { submitScore, getPhaseRanking } from '../lib/firestore';
 import { useAuthStore } from '../store/authStore';
@@ -21,12 +20,15 @@ export default function Results() {
   const suspeitaDeTrapaca = location.state?.suspeitaDeTrapaca;
 
   const [posicao, setPosicao] = useState<number | null>(null);
-  const [enviado, setEnviado] = useState(false);
+  const enviadoRef = useRef(false);
   const recordeAnterior = profile?.melhorWpm ?? 0;
 
   useEffect(() => {
     async function enviar() {
-      if (!phase || !stats || !user || !profile || enviado || suspeitaDeTrapaca) return;
+      if (!phase || !stats || !user || !profile || suspeitaDeTrapaca) return;
+      if (enviadoRef.current) return;
+      enviadoRef.current = true;
+
       await submitScore({
         uid: user.uid,
         nome: profile.nome,
@@ -39,24 +41,19 @@ export default function Results() {
         precisao: stats.precisao,
         erros: stats.erros,
       });
-      setEnviado(true);
       await refreshProfile();
       const ranking = await getPhaseRanking(phase.id);
       const idx = ranking.findIndex((r) => r.uid === user.uid);
       setPosicao(idx >= 0 ? idx + 1 : null);
     }
     enviar();
-    
   }, [phase, stats, user, profile]);
 
   if (!phase || !stats) {
     return (
-      <div className="min-h-screen">
-        <Navbar />
-        <main className="mx-auto max-w-xl px-4 py-16 text-center text-slate-300">
-          Nenhum resultado para mostrar. <Link to="/fases" className="text-accent-blue">Escolher uma fase</Link>
-        </main>
-      </div>
+      <main className="mx-auto max-w-xl px-4 py-16 text-center text-slate-300">
+        Nenhum resultado para mostrar. <Link to="/fases" className="text-accent-blue">Escolher uma fase</Link>
+      </main>
     );
   }
 
@@ -64,9 +61,7 @@ export default function Results() {
   const bateuRecorde = stats.wpm > recordeAnterior;
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+    <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -131,8 +126,7 @@ export default function Results() {
             </Link>
           </div>
         </motion.div>
-      </main>
-    </div>
+    </main>
   );
 }
 

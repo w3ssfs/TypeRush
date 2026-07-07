@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   BoltIcon,
@@ -18,7 +18,7 @@ const links = [
 
 export default function Navbar() {
   const location = useLocation();
-  const navigate = useNavigate();
+  
   const { profile, logout } = useAuthStore();
 
   return (
@@ -68,10 +68,7 @@ export default function Navbar() {
             </span>
           )}
           <button
-            onClick={async () => {
-              await logout();
-              navigate('/login');
-            }}
+            onClick={() => logout()}
             className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-slate-300 transition-colors hover:border-accent-red/60 hover:text-accent-red focus-ring"
           >
             <ArrowRightOnRectangleIcon className="h-4 w-4" />
